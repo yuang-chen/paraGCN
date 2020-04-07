@@ -67,3 +67,17 @@ TEST_CASE("Graph sum") {
     REQUIRE(allclose(b.data, b_ref));
 }
 
+TEST_CASE("Cross entropy") {
+    Variable a(9);
+    a.data = {0.9060, 0.8809, 0.0622, 0.1152, 0.9809, 0.6692, 0.9106, 0.3262, 0.5933};
+    std::vector<float> da_ref = {-0.1947, 0.1351, 0.0596, 0.0651, -0.1785, 0.1134, 0.1458, 0.0813, -0.2271};
+    std::vector<int> truth{0, 1, 2};
+    float loss;
+    CrossEntropyLoss cel(&a, truth.data(), &loss, 3);
+    cel.forward(true);
+    REQUIRE(abs(loss - 0.9295) < 1e-3);
+    cel.backward();
+    REQUIRE(allclose(a.grad, da_ref));
+    cel.forward(false);
+    REQUIRE(abs(loss - 0.9295) < 1e-3);
+}

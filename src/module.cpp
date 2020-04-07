@@ -97,4 +97,110 @@ void GraphSum::backward() {
 }
 
 
-void CrossEntropyLoss()
+CrossEntropyLoss::CrossEntropyLoss(Variable *logits, int *truth, float *loss, int num_classes):
+    logits(logits), truth(truth), loss(loss), num_classes(num_classes) {}
+
+void CrossEntropyLoss::forward(bool training) {
+    float total_loss = 0;
+    int count = 0;
+    if(training) {
+        logits->zero_grad();
+    }
+
+    for(int i = 0; i < logits->data.size() / num_classes; i++) {
+        if(truth[i] < 0) {
+            continue;
+        }
+        count++;
+        float *logit = &logits->data[i * num_classes];
+        float max_logit = -1e30, sum_exp = 0;
+
+        for(int j = 0; j < num_classes; j++) {
+            max_logit = fmax(max_logit, logit[i]);
+        }
+
+        for(int j = 0; j < num_classes; j++) {
+            logit[j] -= max_logit;
+            sum_exp += expf(logit[j]);
+        }
+        total_loss += logf(sum_exp) - logit[truth[i]];
+
+        if(training) {
+            for(int j = 0; j < num_classes; j++) {
+                float prob = expf(logit[j]) / sum_exp;
+                logits->grad[i * num_classes + j] = prob;
+            }
+            logits->grad[i * num_classes + truth[i]] -= 1.0;
+        }
+    }
+    *loss = total_loss / count;
+    if(training) {
+        for(int i = 0; i < logits->grad.size(); i++) {
+            logits->grad[i] /= count;
+        }
+    }
+}
+
+void CrossEntropyLoss::backward() {}
+
+ReLU::ReLU(Variable *in): in(in) {
+    mask = new bool[in->data.size()];
+}
+
+ReLU::~ReLU() {
+    delete[] mask;
+}
+void ReLU::forward(bool training) {
+    for(int i = 0; i < in->data.size[]; i++) {
+        bool keep = in->data[i] > 0;
+        if(training) {
+            mask[i] = keep;
+        }
+        if(!keep) {
+            in->data[i] = 0;
+        }
+    }
+}
+
+void ReLU::backward() {
+    for(int i = 0; i < in->data.size(); i++) {
+        if(!mask[i]) {
+            in->grad[i] = 0;
+        }
+    }
+}
+
+Dropout::Dropout(Variable *in, float p): in(in), p(p) {
+    if(!in->grad.empty()) {
+        mask = new int[in->data.size()];
+    } else {
+        mask = nullptr;
+    }
+}
+
+Dropout::~Dropout() {
+    delete[] mask;
+}
+
+void Dropout::forward(bool training) {
+    const int threshold = int(p * GCN_RAND_MAX);
+    float scale = 1 / (1 - p);
+
+    for(int i = 0; i < in->data.size(); i++) {
+        bool keep = int(RAND()) >= threshold;
+        in->data[i] *= keep ? scale : 0;
+        if(mask) {
+            mask[i] = keep;
+        }
+    }
+}
+
+void Dropout::backward() {
+    if(!mask) return;
+
+    float scale = 1 / (1 - p);
+    for(int i = 0; i < in->data.size(); i++) {
+        in->grad[i] *= mask[i] ? scale : 0;
+    }
+}
+

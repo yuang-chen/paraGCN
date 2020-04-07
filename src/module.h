@@ -50,13 +50,33 @@ public:
 
 class CrossEntropyLoss: public Module {
     Variable *logits;
-    Variable *truth;
+    int *truth;
     float *loss;
     int num_classes;
 public:
-    CrossEntropyLoss(Variable *logits, Variable *truth, float *loss, int num_classes):
-        logits(logits), truth(truth), loss(loss), num_classes(num_classes) {}
+    CrossEntropyLoss(Variable *logits, int *truth, float *loss, int num_classes);
     ~CrossEntropyLoss() {}
     void forward(bool);
     void backward();
 };
+
+class ReLU: public Module {
+    Variable *in;
+    bool *mask;
+public:
+    ReLU(Variable *in);
+    ~ReLU();
+    void forward(bool);
+    void backward();
+};
+
+class Dropout: public Module {
+    Variable *in;
+    int *mask;
+    float p;
+public:
+    Dropout(Variable *in, float p);
+    ~Dropout();
+    void forward(bool);
+    void backward();
+}

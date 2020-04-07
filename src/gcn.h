@@ -28,8 +28,13 @@ public:
 
 class GCN {
     GCNData *data;
-    std::vector<Module*> modules;
+    vector<Module*> modules;
     vector<Variable> variables;
+    Variable *input, *output;
+    vector<int> truth;
+    float loss;
+    
+    
 public:
     GCNParams params;
     GCN(GCNParams params, GCNData *data);

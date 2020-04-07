@@ -23,6 +23,8 @@ int main(int argc, char **argv) {
 
     //GCN gcn(params, &data);
     Variable v(10);
-    cout << v.data.size() << v.grad.size() << endl;
+    v.print();
+    v.glorot(2,5);
+    v.print();
     return EXIT_SUCCESS;
 }

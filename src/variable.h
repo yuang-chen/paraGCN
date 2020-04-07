@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-//#include "rand.h"
+#include "rand.h"
 #include <cstdlib>
 #include <cmath>
 #include <cstdio>
@@ -21,4 +21,5 @@ struct Variable
     void zero();
     void zero_grad();
     float grad_norm(); 
+    void print(int col=0x7fffffff);
 };

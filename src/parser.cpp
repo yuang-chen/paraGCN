@@ -1,9 +1,9 @@
 #include "parser.h"
 
 Parser::Parser(GCNParams *gcnParams, GCNData *gcnData, string graph_name) {
-    this->graph_file.open("data/" + graph_name + ".graph");
-    this->split_file.open("data/" + graph_name + ".split");
-    this->svmlight_file.open("data/" + graph_name + ".svmlight");
+    this->graph_file.open("/data/cppGCN/" + graph_name + ".graph");
+    this->split_file.open("/data/cppGCN/" + graph_name + ".split");
+    this->svmlight_file.open("/data/cppGCN/" + graph_name + ".svmlight");
     this->gcnParams = gcnParams;
     this->gcnData = gcnData;
 }

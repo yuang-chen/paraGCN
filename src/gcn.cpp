@@ -8,6 +8,8 @@ GCNParams GCNParams::get_default() {
 GCN::GCN(GCNParams params, GCNData *data) {
     this->params = params;
     this->data = data;
+    modules.reserve(8);
+    variables.reserve(8);
 }
 
 GCN::~GCN() {

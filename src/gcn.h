@@ -2,6 +2,10 @@
 
 #include <vector>
 #include "sparse.h"
+#include "rand.h"
+#include "module.h"
+
+using namespace std;
 
 struct GCNParams {
     int num_nodes, input_dim, hidden_dim, output_dim;
@@ -24,6 +28,8 @@ public:
 
 class GCN {
     GCNData *data;
+    std::vector<Module*> modules;
+    vector<Variable> variables;
 public:
     GCNParams params;
     GCN(GCNParams params, GCNData *data);

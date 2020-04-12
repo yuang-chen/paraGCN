@@ -22,8 +22,6 @@ public:
     void backward();
 };
 
-
-
 class SparseMatmul: public Module {
     Variable *x, *y, *z;
     int m, n, l;
@@ -79,4 +77,4 @@ public:
     ~Dropout();
     void forward(bool);
     void backward();
-}
+};

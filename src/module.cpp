@@ -116,9 +116,8 @@ void CrossEntropyLoss::forward(bool training) {
         float max_logit = -1e30, sum_exp = 0;
 
         for(int j = 0; j < num_classes; j++) {
-            max_logit = fmax(max_logit, logit[i]);
+            max_logit = fmax(max_logit, logit[j]);
         }
-
         for(int j = 0; j < num_classes; j++) {
             logit[j] -= max_logit;
             sum_exp += expf(logit[j]);
@@ -151,7 +150,7 @@ ReLU::~ReLU() {
     delete[] mask;
 }
 void ReLU::forward(bool training) {
-    for(int i = 0; i < in->data.size[]; i++) {
+    for(int i = 0; i < in->data.size(); i++) {
         bool keep = in->data[i] > 0;
         if(training) {
             mask[i] = keep;
@@ -183,6 +182,7 @@ Dropout::~Dropout() {
 }
 
 void Dropout::forward(bool training) {
+    if(!training) return;
     const int threshold = int(p * GCN_RAND_MAX);
     float scale = 1 / (1 - p);
 

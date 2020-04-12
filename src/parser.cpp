@@ -8,7 +8,7 @@ Parser::Parser(GCNParams *gcnParams, GCNData *gcnData, string graph_name) {
     this->gcnData = gcnData;
 }
 
-
+// src - dst1, dst2, dst3 ...
 void Parser::parseGraph() {
     int node = 0; 
     string line;
@@ -16,17 +16,15 @@ void Parser::parseGraph() {
     auto &graph_sparse_index = this->gcnData->graph;
     graph_sparse_index.indptr.push_back(0);
  
-    while(!this->graph_file.eof()) {    // get the line out of the graph file, which iilutrates node relation
-        getline(this->graph_file, line);
+    while(getline(this->graph_file, line)) {    // get the line out of the graph file, which iilutrates node relation
         graph_sparse_index.indices.push_back(node);  
         graph_sparse_index.indptr.push_back(graph_sparse_index.indptr.back() + 1);
         node++;
         
         istringstream ss(line);    // analyze the line 
-        int number;
-        while(!ss.eof()) {       // get the number out of the line
-            ss >> number;
-            graph_sparse_index.indices.push_back(number);
+        int neighbor;
+        while(ss >> neighbor) {       // get the number out of the line
+            graph_sparse_index.indices.push_back(neighbor);
             graph_sparse_index.indptr.back() += 1;
         }
     }
@@ -50,10 +48,10 @@ void Parser::parseNode() {
         istringstream ss(line);
         int label;
         ss >> label;
+        labels.push_back(label);
         max_label = max(max_label, label);
-        while(!ss.eof()) {
-            string target_value;
-            ss >> target_value;
+        string target_value;
+        while(ss >> target_value) {
             istringstream tv_ss(target_value);
             int target;
             char col;
@@ -69,14 +67,12 @@ void Parser::parseNode() {
     gcnParams->input_dim = max_idx + 1;
     gcnParams->output_dim = max_label + 1;
 }
-
+// labels processed by svm?
 void Parser::parseSplit() {
     auto &split = this->gcnData->split;
     string line;
-
-    while(!split_file.eof()) {
-        getline(split_file, line);
-        split.push_back(stoi(line));
+    while(getline(split_file, line)) {
+       split.push_back(stoi(line));
     }
 }
 

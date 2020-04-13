@@ -31,15 +31,15 @@ void Matmul::backward() {
     }
 }
 
+//  feature * weight = output
 SparseMatmul::SparseMatmul(Variable *x, Variable *y, Variable *z, int m, int n, int l, SparseIndex *sp):
         x(x), y(y), z(z), m(m), n(n), l(l), sp(sp) {}
-
 void SparseMatmul::forward(bool training) {
     z->zero();
     
     for(int i = 0; i < sp->indptr.size() - 1; i++) {
         for(int jj = sp->indptr[i]; jj < sp->indptr[i + 1]; jj++) {
-            int j = sp->indices[jj];
+            int j = sp->indices[jj];  // get the dst vertex 
             for(int k = 0; k < l; k++) {
                 z->data[i * l + k] += x->data[jj] * y->data[j * l + k];
             }

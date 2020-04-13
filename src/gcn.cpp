@@ -14,7 +14,7 @@ GCN::GCN(GCNParams params, GCNData *input_data) {
     //1.1 register and initialize the input data
     variables.emplace_back(data->feature_index.indices.size(), false);
     input = &variables.back();
-    //1.2 dropout the input data
+//1.2 dropout the input data
     modules.push_back(new Dropout(input, params.dropout));
     //2.1 register and get the * at layer 1
     variables.emplace_back(params.num_nodes * params.hidden_dim);
@@ -24,18 +24,18 @@ GCN::GCN(GCNParams params, GCNData *input_data) {
     Variable *layer1_weight = &variables.back();
     layer1_weight->glorot(params.input_dim, params.hidden_dim);
   
-    // 2.3 convert the input data into feature space
+//2.3 X.spmm(W0): compute the feature with filters 
     modules.push_back(new SparseMatmul(input, layer1_weight, layer1_var1, 
         params.num_nodes, params.input_dim, params.hidden_dim, &data->feature_index));
     //3.1 register and normalized var at layer 1
     variables.emplace_back(params.num_nodes * params.hidden_dim);
     Variable *layer1_var2 = &variables.back();
-    //3.2 normalize the var1 into var2
+//3.2  A^XW0: normalize the output from last layer
     modules.push_back(new GraphSum(layer1_var1, layer1_var2,
          &data->graph, params.hidden_dim));
-    //4. ReLU
+//4. ReLU(A^XW0)
     modules.push_back(new ReLU(layer1_var2));
-    //5. dropout and get ready for the 2nd layer 
+//5. dropout and get ready for the 2nd layer 
     modules.push_back(new Dropout(layer1_var2, params.dropout));
     //6.1 do it for the 2nd layer
     variables.emplace_back(params.num_nodes * params.output_dim);
@@ -44,16 +44,16 @@ GCN::GCN(GCNParams params, GCNData *input_data) {
     variables.emplace_back(params.hidden_dim * params.output_dim, true, true);
     Variable *layer2_weight = &variables.back();
     layer2_weight->glorot(params.hidden_dim, params.output_dim);
-    //6.3 dense matrix multiply
+//6.3 ReLU(A^XW0)W1: dense matrix multiply
     modules.push_back(new Matmul(layer1_var2, layer2_weight, layer2_var1, 
         params.num_nodes, params.hidden_dim, params.output_dim));
     //7.1 for the output
     variables.emplace_back(params.num_nodes * params.output_dim);
     output = &variables.back();
-    //7.2 normalize layer2_var1
+//7.2 A^(ReLU(A^XW0)W1): normalize layer2_var1,
     modules.push_back(new GraphSum(layer2_var1, output, &data->graph, params.output_dim));
-    //8. cross entropy loss
     truth = vector<int>(params.num_nodes);
+//8. cross entropy loss, the softmaxt function are inside of it
     modules.push_back(new CrossEntropyLoss(output, truth.data(), &loss, params.output_dim));
     
     AdamParams adam_params = AdamParams::get_default();

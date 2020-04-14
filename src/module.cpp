@@ -1,13 +1,19 @@
 #include "module.h"
+#ifdef OMP
+#include <omp.h>
+#endif
 
 Matmul::Matmul(Variable *x, Variable *y, Variable *z, int m, int n, int l):
     x(x), y(y), z(z), m(m), n(n), l(l) {}
 
 void Matmul::forward(bool training) {
     z->zero();
-    
+#pragma omp parallel for schedule(static)
     for(int i = 0; i < m; i++) {
         for(int j = 0; j < n; j++) {
+#ifdef SIMD
+#pragma omp simd
+#endif
             for(int k = 0; k < l; k++) {
                 z->data[i * l + k] += x->data[i * n + j] * y->data[j * l + k];
             }
@@ -18,16 +24,35 @@ void Matmul::forward(bool training) {
 void Matmul::backward() {
     x->zero_grad();
     y->zero_grad();
+#pragma omp parallel for schedule(static)
     for(int i =0; i < m; i++) {
         for(int j = 0; j < n; j++) {
             float tmp = 0;
-
+#ifdef SIMD
+#pragma omp simd reduction(+:tmp)
+#endif
             for(int k = 0; k < l; k++) {
                 tmp += z->grad[i * l + k] * y->data[j * l + k];
+#ifdef OMP
+                b->local_grad[omp_get_thread_num()][j * l + k] += z->grad[i * l + k] * y->data[j * l + k];
+#else 
                 y->grad[j * l + k] += z->grad[i * l + k] * x->data[i * n + j];
+#endif
             }
             x->grad[i * n + j] = tmp;
         }
+#ifdef OMP
+#ifdef SIMD
+#pragma omp parallel for simd schedule(static)
+#else
+#pragma omp parallel for schedule(static)
+#endif
+        for(int i = 0; i < b->grad.size();i++) {
+            for(int thread = 0; thread < omp_get_num_threads(); thread++) {
+                b->grad[i] += b->local_grad[thread][i];
+            }
+        }
+#endif
     }
 }
 
